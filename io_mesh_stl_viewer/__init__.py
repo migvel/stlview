@@ -29,10 +29,10 @@ bl_info = {
     "version": (1, 0),
     "blender": (2, 6, 3),
     "location": "File > stl viewer",
-    "description": "Import-Export STL files",
+    "description": "Stl viewer",
     "warning": "",
     "wiki_url": "https://github.com/migvel/stlview/"
-                "Scripts/Import-Export/STL",
+                "Scripts/Setl viewer",
     "category": "Import-Export"}
 
 path = ""
@@ -94,7 +94,12 @@ class NextButtom(bpy.types.Operator):
         bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])].select = True
         bpy.context.scene.objects.active = bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])]
 
-        fileidx = fileidx + 1
+        if(fileidx < len(filelist)):
+            fileidx = fileidx + 1
+        else:
+            fileidx = 0
+        
+
         return {'FINISHED'}
 
 class PrevButtom(bpy.types.Operator):
@@ -123,7 +128,13 @@ class PrevButtom(bpy.types.Operator):
         ob2 = createMesh(filename[len(filename)-14 : len(filename)], verts, [], faces)
         bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])].select = True
         bpy.context.scene.objects.active = bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])]
-        fileidx = fileidx - 1
+        
+        if(fileidx > 0):
+            fileidx = fileidx - 1
+        else:
+            fileidx = 0
+    
+        
         return {'FINISHED'}
 
 
