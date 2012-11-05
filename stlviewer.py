@@ -4,12 +4,15 @@ from io_mesh_stl import stl_utils
 from io_mesh_stl import blender_utils
 
 
-path = "set the path here"
+#path = "/home/sio2/projectroom/signature_vases/code/repositorie/files/*.stl"
+path = "/yourpath/*.stl"
 
 fileidx = 0
 filelist = glob.glob(path)
 
 print(glob.glob(path))
+print(filelist)
+
 
 class GeneralUI(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
@@ -47,7 +50,7 @@ class NextButtom(bpy.types.Operator):
         bpy.ops.object.delete()
 
         #next object
-        print(filelist[fileidx])
+        print(filelist)
 
         faces,verts = stl_utils.read_stl(filelist[fileidx])
         filename = filelist[fileidx]
