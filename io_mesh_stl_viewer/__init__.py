@@ -22,6 +22,7 @@ from io_mesh_stl import stl_utils
 from io_mesh_stl import blender_utils
 from bpy.props import StringProperty, BoolProperty, CollectionProperty
 from bpy_extras.io_utils import ExportHelper, ImportHelper
+import aud
 
 bl_info = {
     "name": "Stlviewer",
@@ -38,6 +39,8 @@ bl_info = {
 path = ""
 fileidx = 0
 filelist = glob.glob(path)
+
+device = aud.device()
 
 print(glob.glob(path))
 print(filelist)
@@ -94,6 +97,16 @@ class NextButtom(bpy.types.Operator):
         bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])].select = True
         bpy.context.scene.objects.active = bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])]
 
+
+        sfilename = filelist[fileidx].replace("stl","wav")
+        sfilename = sfilename.replace("model","sound")
+
+        #reproduce sound
+        device = aud.device()
+        beep = aud.Factory(sfilename)
+        handle = device.play(beep)                                                                                                                                                                            
+
+
         if(fileidx < len(filelist)):
             fileidx = fileidx + 1
         else:
@@ -128,6 +141,15 @@ class PrevButtom(bpy.types.Operator):
         ob2 = createMesh(filename[len(filename)-14 : len(filename)], verts, [], faces)
         bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])].select = True
         bpy.context.scene.objects.active = bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])]
+
+        sfilename = filelist[fileidx].replace("stl","wav")
+        sfilename = sfilename.replace("model","sound")
+
+        #reproduce sound
+        device = aud.device()
+        beep = aud.Factory(sfilename)
+        handle = device.play(beep)                                                                                                                                                                            
+
         
         if(fileidx > 0):
             fileidx = fileidx - 1
@@ -153,6 +175,7 @@ class OpenButtom(bpy.types.Operator,ImportHelper):
         global path
         global filelist
         global fileidx
+        global device
 
         path = self.directory+"*.stl"
         filelist = glob.glob(path)
@@ -168,9 +191,19 @@ class OpenButtom(bpy.types.Operator,ImportHelper):
         bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])].select = True
         bpy.context.scene.objects.active = bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])]
 
-        fileidx = fileidx + 1
+
         
+        sfilename = filelist[fileidx].replace("stl","wav")
+        sfilename = sfilename.replace("model","sound")
+
+        #reproduce sound
+        device = aud.device()
+        beep = aud.Factory(sfilename)
+        handle = device.play(beep)                                                                                                                                                                                                                                             
+        fileidx = fileidx + 1
         return {'FINISHED'}
+
+
 
 def find_object(targetname):
     """ Return index of objects that contains targename in name """
