@@ -114,8 +114,6 @@ class NextButtom(bpy.types.Operator):
             if(loadbysound):
                 if(os.path.isfile(cleanpath.replace("sound","model")+filename+".stl")==True):
                     load_object(cleanpath.replace("sound","model")+filename+".stl")
-                    nextloop = False
-                    print(filename)
                     play_object(cleanpath+filename+".wav")
                     nextloop == False
             else:
@@ -155,8 +153,6 @@ class PrevButtom(bpy.types.Operator):
             if(loadbysound):
                 if(os.path.isfile(cleanpath.replace("sound","model")+filename+".stl")==True):
                     load_object(cleanpath.replace("sound","model")+filename+".stl")
-                    nextloop = False
-                    print(filename)
                     play_object(cleanpath+filename+".wav")
                     nextloop = False
             else:
@@ -189,8 +185,6 @@ class OpenButtom(bpy.types.Operator,ImportHelper):
         print(self.directory)
         cleanpath = self.directory
         
-        print("------------------->>>>>>>>>>>")
-
         if("sound" in self.directory):
             path = self.directory+"*.wav" 
             loadbysound  =True
@@ -200,7 +194,6 @@ class OpenButtom(bpy.types.Operator,ImportHelper):
             loadbysound  = False
 
         filelist = glob.glob(path)
-
 
         #generate basename list
         basenamelist = []
@@ -222,7 +215,6 @@ class OpenButtom(bpy.types.Operator,ImportHelper):
                 if(os.path.isfile(self.directory.replace("sound","model")+filename+".stl")==True):
                     load_object(self.directory.replace("sound","model")+filename+".stl")
                     nextloop = False
-                    print(filename)
                     play_object(self.directory+filename+".wav")
             else:
                 load_object(self.directory)
