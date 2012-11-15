@@ -22,6 +22,7 @@ from io_mesh_stl import stl_utils
 from io_mesh_stl import blender_utils
 from bpy.props import StringProperty, BoolProperty, CollectionProperty
 from bpy_extras.io_utils import ExportHelper, ImportHelper
+import os
 import aud
 
 bl_info = {
@@ -39,11 +40,28 @@ bl_info = {
 path = ""
 fileidx = 0
 filelist = glob.glob(path)
-
-device = aud.device()
+loadbysound = True
+basenamelist = []
 
 print(glob.glob(path))
 print(filelist)
+
+def load_object(filename):
+    print("loading obj")
+    
+    try:
+        faces,verts = stl_utils.read_stl(filename)
+        ob1 = createMesh( filename[len(filename)-14 : len(filename)], verts, [], faces)
+        bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])].select = True
+        bpy.context.scene.objects.active = bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])]
+    except:
+        return(False)
+
+def play_object(filename):
+    device = aud.device()
+    beep = aud.Factory(filename)
+    handle = device.play(beep)
+
 
 class GeneralUI(bpy.types.Panel):
     bl_space_type = 'VIEW_3D'
@@ -81,38 +99,33 @@ class NextButtom(bpy.types.Operator):
     def execute(self, context):
         global fileidx
         global filelist
+        global basenamelist
+        global cleanpath
 
         #deletes all the objects
         select_all_objects()
         bpy.ops.object.delete()
 
-        #next object
-        print("-- Filename opened:")
-        print("idx"+str(fileidx))
-        print(filelist[fileidx])
 
-        faces,verts = stl_utils.read_stl(filelist[fileidx])
-        filename = filelist[fileidx]
-        ob1 = createMesh( filename[len(filename)-14 : len(filename)], verts, [], faces)
-        bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])].select = True
-        bpy.context.scene.objects.active = bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])]
+        nextloop = True
+        while(nextloop == True):
+            filename = basenamelist[fileidx]
 
+            if(loadbysound):
+                if(os.path.isfile(cleanpath.replace("sound","model")+filename+".stl")==True):
+                    load_object(cleanpath.replace("sound","model")+filename+".stl")
+                    nextloop = False
+                    print(filename)
+                    play_object(cleanpath+filename+".wav")
+                    nextloop == False
+            else:
+                load_object(cleanpath)
+                play_object(cleanpath.replace("model","sound")+filename+".wav")
+                
 
-        sfilename = filelist[fileidx].replace("stl","wav")
-        sfilename = sfilename.replace("model","sound")
-
-        #reproduce sound
-        device = aud.device()
-        beep = aud.Factory(sfilename)
-        handle = device.play(beep)                                                                                                                                                                            
-
-
-        if(fileidx < len(filelist)):
-            fileidx = fileidx + 1
-        else:
-            fileidx = 0
-        
-
+            print("Object not found")
+            fileidx = (fileidx%len(basenamelist))+1
+                
         return {'FINISHED'}
 
 class PrevButtom(bpy.types.Operator):
@@ -126,36 +139,31 @@ class PrevButtom(bpy.types.Operator):
 
     def execute(self, context):
         global fileidx
+        global filelist
+        global basenamelist
+        global cleanpath
 
         #deletes all the objects
         select_all_objects()
         bpy.ops.object.delete()
 
-        #next object
-        print("-- Filename opened:")
-        print("idx:"+str(fileidx))
-        print(filelist[fileidx])
-
-        faces,verts = stl_utils.read_stl(filelist[fileidx])
-        filename = str(filelist[fileidx])
-        ob2 = createMesh(filename[len(filename)-14 : len(filename)], verts, [], faces)
-        bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])].select = True
-        bpy.context.scene.objects.active = bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])]
-
-        sfilename = filelist[fileidx].replace("stl","wav")
-        sfilename = sfilename.replace("model","sound")
-
-        #reproduce sound
-        device = aud.device()
-        beep = aud.Factory(sfilename)
-        handle = device.play(beep)                                                                                                                                                                            
-
         
-        if(fileidx > 0):
-            fileidx = fileidx - 1
-        else:
-            fileidx = 0
-    
+        nextloop = True
+        while(nextloop == True):
+            filename = basenamelist[fileidx]
+
+            if(loadbysound):
+                if(os.path.isfile(cleanpath.replace("sound","model")+filename+".stl")==True):
+                    load_object(cleanpath.replace("sound","model")+filename+".stl")
+                    nextloop = False
+                    print(filename)
+                    play_object(cleanpath+filename+".wav")
+                    nextloop = False
+            else:
+                load_object(cleanpath)
+                play_object(cleanpath.replace("model","sound")+filename+".wav")
+                fileidx = fileidx%(len(basenamelist) - 1)
+                
         
         return {'FINISHED'}
 
@@ -166,7 +174,7 @@ class OpenButtom(bpy.types.Operator,ImportHelper):
     bl_label = "STL viewer"
     bl_options = {'UNDO'}
 
-    filename_ext = ".stl"
+    #filename_ext = ".stl"
     directory = StringProperty(
             subtype='DIR_PATH',
             )
@@ -175,35 +183,60 @@ class OpenButtom(bpy.types.Operator,ImportHelper):
         global path
         global filelist
         global fileidx
-        global device
+        global basenamelist
+        global cleanpath
 
-        path = self.directory+"*.stl"
-        filelist = glob.glob(path)
+        print(self.directory)
+        cleanpath = self.directory
         
+        print("------------------->>>>>>>>>>>")
+
+        if("sound" in self.directory):
+            path = self.directory+"*.wav" 
+            loadbysound  =True
+
+        else:
+            path = self.directory+"*.stl" 
+            loadbysound  = False
+
+        filelist = glob.glob(path)
+
+
+        #generate basename list
+        basenamelist = []
+        for act in enumerate(filelist):
+            
+            filenam = os.path.basename(act[1])
+            filenam = os.path.splitext(filenam)[0]
+            basenamelist.append(filenam)
+
         #loading the first object
         #deletes all the objects
         select_all_objects()
         bpy.ops.object.delete()
 
-        faces,verts = stl_utils.read_stl(filelist[fileidx])
-        filename = filelist[fileidx]
-        ob1 = createMesh( filename[len(filename)-14 : len(filename)], verts, [], faces)
-        bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])].select = True
-        bpy.context.scene.objects.active = bpy.data.objects[find_object(filename[len(filename)-14 : len(filename)])]
+        nextloop = True
+        while(nextloop == True):
+            filename = basenamelist[fileidx]
+            if(loadbysound):
+                if(os.path.isfile(self.directory.replace("sound","model")+filename+".stl")==True):
+                    load_object(self.directory.replace("sound","model")+filename+".stl")
+                    nextloop = False
+                    print(filename)
+                    play_object(self.directory+filename+".wav")
+            else:
+                load_object(self.directory)
+                play_object(self.directory.replace("model","sound")+filename+".wav")
+                
+
+            print("Object not found")
+            nextloop == True
+            
+            fileidx = fileidx + 1
+            
 
 
-        
-        sfilename = filelist[fileidx].replace("stl","wav")
-        sfilename = sfilename.replace("model","sound")
-
-        #reproduce sound
-        device = aud.device()
-        beep = aud.Factory(sfilename)
-        handle = device.play(beep)                                                                                                                                                                                                                                             
-        fileidx = fileidx + 1
         return {'FINISHED'}
-
-
 
 def find_object(targetname):
     """ Return index of objects that contains targename in name """
